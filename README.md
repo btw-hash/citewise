@@ -2,7 +2,7 @@
 
 Question answering over company documents where every sentence of the answer carries a citation, and every citation is checked against the source before the user sees it.
 
-![Citewise answering a handbook question with the cited passage highlighted](docs/screenshot.jpg)
+![Citewise walkthrough: a cited answer, the highlighted source passage, a refusal and the eval table](docs/demo.gif)
 
 ## Why it exists
 
