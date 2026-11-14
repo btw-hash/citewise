@@ -1,0 +1,211 @@
+{
+  "mode": "extractive",
+  "ranAt": "2026-11-14T23:19:23.147Z",
+  "metrics": {
+    "cases": 22,
+    "retrievalHitAt3": 0.9444444444444444,
+    "answeredWithExpectedSource": 0.8888888888888888,
+    "refusalAccuracy": 1,
+    "verifiedCitationRate": 1
+  },
+  "rows": [
+    {
+      "question": "Which days do I need to be in the office?",
+      "expected": "remote-work.md#office-days",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 3
+    },
+    {
+      "question": "How long can I work from another country?",
+      "expected": "remote-work.md#working-from-abroad",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "How much is the home office allowance?",
+      "expected": "remote-work.md#home-office-allowance",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "What are the core hours?",
+      "expected": "remote-work.md#core-hours",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "Who approves an expense claim of 1,200 euros?",
+      "expected": "expenses.md#approval-limits",
+      "retrievedTop3": true,
+      "answered": false,
+      "citedExpected": false,
+      "dropped": 0,
+      "claims": 0
+    },
+    {
+      "question": "What is the daily meal limit on a business trip?",
+      "expected": "expenses.md#meals-and-travel",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "When do approved expense claims get paid?",
+      "expected": "expenses.md#reimbursement-timing",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 2
+    },
+    {
+      "question": "How many days of annual leave do I get?",
+      "expected": "time-off.md#annual-leave",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 2
+    },
+    {
+      "question": "How many unused leave days carry over to next year?",
+      "expected": "time-off.md#carry-over",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "When do I need a doctor's note for sick leave?",
+      "expected": "time-off.md#sick-leave",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "How long is parental leave paid at full salary?",
+      "expected": "time-off.md#parental-leave",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "What should I do if I lose my laptop?",
+      "expected": "security.md#reporting-an-incident",
+      "retrievedTop3": false,
+      "answered": false,
+      "citedExpected": false,
+      "dropped": 0,
+      "claims": 0
+    },
+    {
+      "question": "How soon must operating system updates be installed?",
+      "expected": "security.md#laptops",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "How long is the probation period?",
+      "expected": "onboarding.md#probation-period",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 2
+    },
+    {
+      "question": "When must security training be completed?",
+      "expected": "onboarding.md#required-training",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "How fast must a critical alert be acknowledged?",
+      "expected": "on-call.md#response-times",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 1
+    },
+    {
+      "question": "How much are on-call engineers paid per week?",
+      "expected": "on-call.md#compensation",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 3
+    },
+    {
+      "question": "When can an engineer join the on-call rotation?",
+      "expected": "on-call.md#eligibility",
+      "retrievedTop3": true,
+      "answered": true,
+      "citedExpected": true,
+      "dropped": 0,
+      "claims": 2
+    },
+    {
+      "question": "What is the company's stock option vesting schedule?",
+      "expected": null,
+      "retrievedTop3": null,
+      "answered": false,
+      "citedExpected": null,
+      "dropped": 0,
+      "claims": 0
+    },
+    {
+      "question": "Which health insurance provider does the company use?",
+      "expected": null,
+      "retrievedTop3": null,
+      "answered": false,
+      "citedExpected": null,
+      "dropped": 0,
+      "claims": 0
+    },
+    {
+      "question": "How do I book the gym in the Berlin office?",
+      "expected": null,
+      "retrievedTop3": null,
+      "answered": false,
+      "citedExpected": null,
+      "dropped": 0,
+      "claims": 0
+    },
+    {
+      "question": "What is the dress code for client dinners?",
+      "expected": null,
+      "retrievedTop3": null,
+      "answered": false,
+      "citedExpected": null,
+      "dropped": 0,
+      "claims": 0
+    }
+  ]
+}

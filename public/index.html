@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Citewise</title>
+    <style>
+      :root {
+        --bg: #f3f1ec;
+        --panel: #fffdf8;
+        --ink: #1d232b;
+        --muted: #636c78;
+        --line: #d9d4c8;
+        --accent: #1f4e79;
+        --mark: #ffe38a;
+        --ok: #1f7a4d;
+        --bad: #a33a3a;
+        --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #14181d;
+          --panel: #1c2229;
+          --ink: #e6eaef;
+          --muted: #98a3b0;
+          --line: #2f3944;
+          --accent: #7fb6e6;
+          --mark: #6b5a13;
+          --ok: #62c592;
+          --bad: #e58a8a;
+          color-scheme: dark;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.55 Georgia, "Times New Roman", serif;
+      }
+      main { max-width: 1120px; margin: 0 auto; padding: 32px 20px 64px; display: grid; gap: 24px; }
+      header h1 { margin: 0; font-size: 30px; letter-spacing: -0.01em; }
+      header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+      .mode { font: 12px var(--mono); color: var(--muted); }
+      form { display: flex; gap: 8px; flex-wrap: wrap; }
+      input[type="text"] {
+        flex: 1 1 320px; min-width: 0; padding: 12px 14px; font: inherit;
+        border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink);
+      }
+      button {
+        font: 600 14px system-ui, sans-serif; padding: 12px 18px; border-radius: 4px;
+        border: 1px solid var(--accent); background: var(--accent); color: var(--panel); cursor: pointer;
+      }
+      button.chip {
+        background: transparent; color: var(--accent); border-color: var(--line);
+        font-weight: 500; padding: 6px 10px; font-size: 13px;
+      }
+      button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+      .cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+      @media (max-width: 760px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+      h2 { font: 600 12px system-ui, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 18px; }
+      .claim { margin: 0 0 10px; }
+      .ref {
+        font: 600 11px var(--mono); vertical-align: super; margin-left: 3px; padding: 1px 5px;
+        border: 1px solid var(--accent); border-radius: 3px; color: var(--accent); background: transparent; cursor: pointer;
+      }
+      .ref.on { background: var(--accent); color: var(--panel); }
+      .refusal { color: var(--bad); margin: 0; }
+      .meta { font: 12px var(--mono); color: var(--muted); margin-top: 12px; }
+      .source { border-top: 1px solid var(--line); padding: 12px 0; }
+      .source:first-of-type { border-top: 0; padding-top: 0; }
+      .source h3 { margin: 0 0 4px; font: 600 14px system-ui, sans-serif; }
+      .source .id { font: 11px var(--mono); color: var(--muted); }
+      .source p { margin: 8px 0 0; font-size: 15px; }
+      mark { background: var(--mark); color: inherit; padding: 0 1px; }
+      mark.on { outline: 2px solid var(--accent); }
+      .empty { color: var(--muted); margin: 0; }
+      table { border-collapse: collapse; width: 100%; font: 14px system-ui, sans-serif; }
+      td { padding: 6px 0; border-top: 1px solid var(--line); }
+      td:last-child { text-align: right; font-family: var(--mono); }
+      .miss { font: 13px system-ui, sans-serif; color: var(--muted); margin: 10px 0 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Citewise</h1>
+        <p>
+          Ask the Larkspur Freight handbook a question. Every sentence of the answer links to the
+          passage it came from, and anything that cannot be traced to a source is thrown away.
+        </p>
+        <p class="mode" id="mode">checking service…</p>
+      </header>
+
+      <section>
+        <form id="ask-form">
+          <input type="text" id="question" maxlength="300" placeholder="How many days of annual leave do I get?" aria-label="Question" />
+          <button type="submit" id="ask-button">Ask</button>
+        </form>
+        <div class="chips" id="chips" style="margin-top: 10px"></div>
+      </section>
+
+      <section class="cols">
+        <div>
+          <h2>Answer</h2>
+          <div class="card" id="answer"><p class="empty">Pick an example or type a question.</p></div>
+        </div>
+        <div>
+          <h2>Sources</h2>
+          <div class="card" id="sources"><p class="empty">Cited passages appear here.</p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Last eval run</h2>
+        <div class="card" id="eval"><p class="empty">Loading…</p></div>
+      </section>
+    </main>
+
+    <script>
+      const examples = [
+        "How many days of annual leave do I get?",
+        "How long can I work from another country?",
+        "How fast must a critical alert be acknowledged?",
+        "When do approved expense claims get paid?",
+        "What is the company's stock option vesting schedule?",
+      ];
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+      function highlight(text, quotes) {
+        let html = esc(text);
+        quotes.forEach(({ quote, n }) => {
+          const q = esc(quote);
+          const at = html.toLowerCase().indexOf(q.toLowerCase());
+          if (at >= 0) {
+            html = html.slice(0, at) + '<mark data-n="' + n + '">' + html.slice(at, at + q.length) + "</mark>" + html.slice(at + q.length);
+          }
+        });
+        return html;
+      }
+
+      function focusRef(n) {
+        document.querySelectorAll(".ref, mark").forEach((el) => el.classList.toggle("on", el.dataset.n === String(n)));
+        const target = document.querySelector('mark[data-n="' + n + '"]');
+        if (target) target.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+
+      function render(data) {
+        if (!data.answerable) {
+          $("answer").innerHTML =
+            '<p class="refusal">The handbook does not answer this question.</p>' +
+            '<p class="meta">' + esc(data.mode) + " · " + data.ms + " ms · " + data.dropped.length + " unverified claim(s) dropped</p>";
+          $("sources").innerHTML = '<p class="empty">Nothing was cited.</p>';
+          return;
+        }
+        $("answer").innerHTML =
+          data.claims
+            .map((c, i) => '<p class="claim">' + esc(c.text) + '<button type="button" class="ref" data-n="' + (i + 1) + '">' + (i + 1) + "</button></p>")
+            .join("") +
+          '<p class="meta">' + esc(data.mode) + " · " + data.ms + " ms · " + data.claims.length + " verified, " + data.dropped.length + " dropped</p>";
+        $("sources").innerHTML = data.sources
+          .map((s) => {
+            const quotes = data.claims.map((c, i) => ({ ...c, n: i + 1 })).filter((c) => c.chunkId === s.id);
+            return '<div class="source"><h3>' + esc(s.title) + '</h3><span class="id">' + esc(s.id) + "</span><p>" + highlight(s.text, quotes) + "</p></div>";
+          })
+          .join("");
+        document.querySelectorAll(".ref").forEach((b) => b.addEventListener("click", () => focusRef(b.dataset.n)));
+      }
+
+      async function ask(question) {
+        $("question").value = question;
+        $("ask-button").disabled = true;
+        $("answer").innerHTML = '<p class="empty">Searching…</p>';
+        try {
+          const res = await fetch("/api/ask", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Request failed");
+          render(data);
+        } catch (err) {
+          $("answer").innerHTML = '<p class="refusal">' + esc(err.message) + "</p>";
+        } finally {
+          $("ask-button").disabled = false;
+        }
+      }
+
+      $("ask-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const q = $("question").value.trim();
+        if (q) ask(q);
+      });
+      examples.forEach((q) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.textContent = q;
+        b.addEventListener("click", () => ask(q));
+        $("chips").appendChild(b);
+      });
+
+      fetch("/api/health").then((r) => r.json()).then((d) => { $("mode").textContent = "answer mode: " + d.mode; });
+      fetch("/api/eval")
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then((d) => {
+          const pct = (v) => (v * 100).toFixed(1) + "%";
+          const m = d.metrics;
+          const misses = d.rows.filter((r) => (r.expected === null ? r.answered : !(r.answered && r.citedExpected)));
+          $("eval").innerHTML =
+            "<table>" +
+            "<tr><td>Test questions</td><td>" + m.cases + "</td></tr>" +
+            "<tr><td>Right passage in the top 3</td><td>" + pct(m.retrievalHitAt3) + "</td></tr>" +
+            "<tr><td>Answered and cited the right passage</td><td>" + pct(m.answeredWithExpectedSource) + "</td></tr>" +
+            "<tr><td>Refused questions the handbook does not cover</td><td>" + pct(m.refusalAccuracy) + "</td></tr>" +
+            "<tr><td>Citations that passed verification</td><td>" + pct(m.verifiedCitationRate) + "</td></tr>" +
+            "</table>" +
+            (misses.length ? '<p class="miss">Missed: ' + misses.map((r) => esc(r.question)).join(" · ") + "</p>" : "") +
+            '<p class="meta">' + esc(d.mode) + " · " + esc(d.ranAt.slice(0, 10)) + "</p>";
+        })
+        .catch(() => { $("eval").innerHTML = '<p class="empty">No eval report yet.</p>'; });
+    </script>
+  </body>
+</html>
