@@ -81,6 +81,34 @@
       td { padding: 6px 0; border-top: 1px solid var(--line); }
       td:last-child { text-align: right; font-family: var(--mono); }
       .miss { font: 13px system-ui, sans-serif; color: var(--muted); margin: 10px 0 0; }
+
+      /* Motion: the answer arrives sentence by sentence, the quoted line is drawn like a
+         marker stroke, the eval figures count up. All of it is off under reduced motion. */
+      button { transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease; }
+      button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); }
+      button:active:not(:disabled) { transform: translateY(0); box-shadow: none; }
+      button.chip:hover { border-color: var(--accent); }
+      .ref { transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease; }
+      .ref.on { transform: scale(1.12); }
+      mark { background: linear-gradient(var(--mark), var(--mark)) no-repeat 0 0 / 100% 100%; transition: outline-color 0.2s ease; outline: 2px solid transparent; }
+      mark.on { outline-color: var(--accent); }
+      @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+      @keyframes sweep { from { background-size: 0% 100%; } }
+      @keyframes dots { 0% { content: ""; } 33% { content: "."; } 66% { content: ".."; } 100% { content: "..."; } }
+      @keyframes nudge { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      @media (prefers-reduced-motion: no-preference) {
+        header > *, main > section { animation: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+        header > :nth-child(2) { --i: 1; }
+        header > :nth-child(3) { --i: 2; }
+        main > section:nth-of-type(1) { --i: 3; }
+        main > section:nth-of-type(2) { --i: 4; }
+        main > section:nth-of-type(3) { --i: 5; }
+        .claim, .source, .eval-row { animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 110ms); }
+        .source { animation-delay: calc(120ms + var(--i, 0) * 110ms); }
+        mark { animation: sweep 0.7s cubic-bezier(0.3, 0.6, 0.2, 1) both; animation-delay: calc(450ms + var(--n, 1) * 180ms); }
+        .searching::after { content: ""; animation: dots 0.9s steps(1) infinite; }
+        .refusal { animation: nudge 0.35s ease 0.05s; }
+      }
     </style>
   </head>
   <body>
@@ -130,13 +158,39 @@
       const $ = (id) => document.getElementById(id);
       const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
+      // Figures count up once, when the eval table scrolls into view.
+      function countUp(cells) {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            io.unobserve(entry.target);
+            const cell = entry.target;
+            const final = cell.textContent;
+            const m = /^(\d+(?:\.\d+)?)(.*)$/.exec(final);
+            if (!m) return;
+            const target = Number(m[1]);
+            const digits = (m[1].split(".")[1] || "").length;
+            let start = null;
+            const step = (now) => {
+              start ??= now;
+              const k = Math.min(1, (now - start) / 900);
+              cell.textContent = k === 1 ? final : (target * (1 - Math.pow(1 - k, 3))).toFixed(digits) + m[2];
+              if (k < 1) requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          });
+        });
+        cells.forEach((c) => io.observe(c));
+      }
+
       function highlight(text, quotes) {
         let html = esc(text);
         quotes.forEach(({ quote, n }) => {
           const q = esc(quote);
           const at = html.toLowerCase().indexOf(q.toLowerCase());
           if (at >= 0) {
-            html = html.slice(0, at) + '<mark data-n="' + n + '">' + html.slice(at, at + q.length) + "</mark>" + html.slice(at + q.length);
+            html = html.slice(0, at) + '<mark data-n="' + n + '" style="--n:' + n + '">' + html.slice(at, at + q.length) + "</mark>" + html.slice(at + q.length);
           }
         });
         return html;
@@ -158,13 +212,13 @@
         }
         $("answer").innerHTML =
           data.claims
-            .map((c, i) => '<p class="claim">' + esc(c.text) + '<button type="button" class="ref" data-n="' + (i + 1) + '">' + (i + 1) + "</button></p>")
+            .map((c, i) => '<p class="claim" style="--i:' + i + '">' + esc(c.text) + '<button type="button" class="ref" data-n="' + (i + 1) + '">' + (i + 1) + "</button></p>")
             .join("") +
           '<p class="meta">' + esc(data.mode) + " · " + data.ms + " ms · " + data.claims.length + " verified, " + data.dropped.length + " dropped</p>";
         $("sources").innerHTML = data.sources
-          .map((s) => {
+          .map((s, k) => {
             const quotes = data.claims.map((c, i) => ({ ...c, n: i + 1 })).filter((c) => c.chunkId === s.id);
-            return '<div class="source"><h3>' + esc(s.title) + '</h3><span class="id">' + esc(s.id) + "</span><p>" + highlight(s.text, quotes) + "</p></div>";
+            return '<div class="source" style="--i:' + k + '"><h3>' + esc(s.title) + '</h3><span class="id">' + esc(s.id) + "</span><p>" + highlight(s.text, quotes) + "</p></div>";
           })
           .join("");
         document.querySelectorAll(".ref").forEach((b) => b.addEventListener("click", () => focusRef(b.dataset.n)));
@@ -173,7 +227,7 @@
       async function ask(question) {
         $("question").value = question;
         $("ask-button").disabled = true;
-        $("answer").innerHTML = '<p class="empty">Searching…</p>';
+        $("answer").innerHTML = '<p class="empty searching">Searching</p>';
         try {
           const res = await fetch("/api/ask", {
             method: "POST",
@@ -213,14 +267,19 @@
           const misses = d.rows.filter((r) => (r.expected === null ? r.answered : !(r.answered && r.citedExpected)));
           $("eval").innerHTML =
             "<table>" +
-            "<tr><td>Test questions</td><td>" + m.cases + "</td></tr>" +
-            "<tr><td>Right passage in the top 3</td><td>" + pct(m.retrievalHitAt3) + "</td></tr>" +
-            "<tr><td>Answered and cited the right passage</td><td>" + pct(m.answeredWithExpectedSource) + "</td></tr>" +
-            "<tr><td>Refused questions the handbook does not cover</td><td>" + pct(m.refusalAccuracy) + "</td></tr>" +
-            "<tr><td>Citations that passed verification</td><td>" + pct(m.verifiedCitationRate) + "</td></tr>" +
+            [
+              ["Test questions", String(m.cases)],
+              ["Right passage in the top 3", pct(m.retrievalHitAt3)],
+              ["Answered and cited the right passage", pct(m.answeredWithExpectedSource)],
+              ["Refused questions the handbook does not cover", pct(m.refusalAccuracy)],
+              ["Citations that passed verification", pct(m.verifiedCitationRate)],
+            ]
+              .map(([k, v], i) => '<tr class="eval-row" style="--i:' + i + '"><td>' + k + '</td><td class="num">' + v + "</td></tr>")
+              .join("") +
             "</table>" +
             (misses.length ? '<p class="miss">Missed: ' + misses.map((r) => esc(r.question)).join(" · ") + "</p>" : "") +
             '<p class="meta">' + esc(d.mode) + " · " + esc(d.ranAt.slice(0, 10)) + "</p>";
+          countUp($("eval").querySelectorAll(".num"));
         })
         .catch(() => { $("eval").innerHTML = '<p class="empty">No eval report yet.</p>'; });
     </script>
